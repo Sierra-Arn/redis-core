@@ -1,0 +1,41 @@
+services:
+  # =====================================================
+  # Redis Database Server Service
+  # =====================================================
+  redis-server:
+    # Using Redis 7 with Alpine Linux for minimal footprint
+    image: docker.io/library/redis:7-alpine
+    
+    # Container naming for easy identification and management
+    container_name: ${REDIS_SERVER_CONTAINER}
+    
+    # Redis Environment Configuration
+    environment:
+      REDIS_ADMIN_USERNAME: ${REDIS_ADMIN_USERNAME}
+      REDIS_ADMIN_PASSWORD: ${REDIS_ADMIN_PASSWORD}
+
+      REDIS_USERNAME: ${REDIS_USERNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    
+    # Port mapping configuration
+    # Maps external host port to internal container port (default Redis port 6379)
+    ports:
+      - "${REDIS_EXTERNAL_PORT}:${REDIS_INTERNAL_PORT}"
+    
+    # Volume mounts for ACL configuration and initialization
+    volumes:
+      # Mount ACL configuration file for user management
+      # This file defines users, passwords, and access permissions
+      # Redis will load this configuration on startup to create users with specific privileges
+      - ../app/initialization/01-create-users.acl:/usr/local/etc/redis/01-create-users.acl
+    
+    # Start Redis with ACL-based authentication
+    # ====================================================
+    #   Command Options:
+    #   - --aclfile: Load user definitions and permissions from ACL file
+    # ====================================================
+    #   Why ACL instead of --requirepass:
+    #   - --requirepass: Single password for default user (less secure)
+    #   - --aclfile: Multiple users with granular permissions (more secure)
+    # ====================================================
+    command: redis-server --aclfile /usr/local/etc/redis/01-create-users.acl

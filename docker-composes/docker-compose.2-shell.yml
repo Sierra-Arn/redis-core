@@ -1,0 +1,71 @@
+services:
+  # =====================================================
+  # Redis Database Server Service
+  # =====================================================
+  redis-server:
+    image: docker.io/library/redis:7-alpine
+    container_name: ${REDIS_SERVER_CONTAINER}
+    environment:
+      REDIS_ADMIN_USERNAME: ${REDIS_ADMIN_USERNAME}
+      REDIS_ADMIN_PASSWORD: ${REDIS_ADMIN_PASSWORD}
+      REDIS_USERNAME: ${REDIS_USERNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "${REDIS_EXTERNAL_PORT}:${REDIS_INTERNAL_PORT}"
+    volumes:
+      - ../app/initialization/01-create-users.acl:/usr/local/etc/redis/01-create-users.acl
+    command: redis-server --aclfile /usr/local/etc/redis/01-create-users.acl
+
+    # Network configuration for service communication
+    # Connects to custom bridge network for isolated communication between services
+    networks:
+      - redis-network
+
+    # Health check configuration to monitor Redis availability
+    # Ensures Redis is ready to accept connections before dependent services start
+    healthcheck:
+      # Use redis-cli PING command to test Redis connectivity with ACL authentication
+      # Uses admin credentials for health check verification
+      test: ["CMD", "redis-cli", "--user", "${REDIS_ADMIN_USERNAME}", "--pass", "${REDIS_ADMIN_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =====================================================
+  # Redis Client Service
+  # 
+  # The following container provides a lightweight interactive interface 
+  # for connecting to the Redis database running in a separate container.
+  # All connection parameters must be manually specified in redis-cli commands.
+  # =====================================================
+  redis-client:
+    # Using same Redis image to ensure compatibility with server
+    image: docker.io/library/redis:7-alpine
+    
+    # Container naming for easy identification and management
+    container_name: ${REDIS_CLIENT_CONTAINER}
+    
+    # Service dependency configuration
+    # Ensures redis-server is healthy before starting client
+    depends_on:
+      redis-server:
+        # Wait for health check to pass, not just container start
+        condition: service_healthy
+    
+    # Network configuration - same network as server for communication
+    networks:
+      - redis-network
+    
+    # Keeps container running indefinitely to allow interactive shell access
+    command: tail -f /dev/null
+
+# =====================================================
+# Network Configuration
+# =====================================================
+networks:
+  # Custom bridge network for Redis services isolation
+  # Provides internal DNS resolution and network segmentation
+  redis-network:
+    # Bridge driver for single-host networking with custom configuration
+    # Allows containers to communicate while isolating from other networks
+    driver: bridge
