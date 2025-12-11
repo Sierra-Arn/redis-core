@@ -12,7 +12,7 @@ class RedisConfig(BaseSettings):
     ----------
     host : str
         Hostname or IP address of the Redis server. Default is `"127.0.0.1"`.
-    internal_port : int
+    external_port : int
         TCP port the server listens on. Must be in the range 1-65535.
         Default is `6379`.
     username : str
@@ -40,12 +40,22 @@ class RedisConfig(BaseSettings):
     4. Any extra (unrecognized) variables are silently ignored.
     5. The configuration is immutable after instantiation.
     6. During instantiation, values are resolved in the following order of precedence 
-    (from highest to lowest priority):
+       (from highest to lowest priority):
         1. **Explicitly passed arguments** — values provided directly to the constructor.
         2. **Environment variables** — including those loaded from the `.env` file,
-        prefixed according to the subclass's `env_prefix`.
+           prefixed according to the subclass's `env_prefix`.
         3. **Code-defined defaults** — fallback values specified as field defaults
-        in the class definition.
+           in the class definition.
+    
+    **Port usage note**:
+    --------------------
+    The application is currently run locally on the host machine, 
+    while Redis is running inside a Docker container. 
+    Therefore, the connection must use the **external port** 
+    (the host-side port mapped to Redis' internal port via Docker's `-p external:internal` mapping). 
+    If both the application and Redis were running in the same Docker network 
+    (e.g., as services in one `docker-compose.yml`),
+    the internal port would be used instead.
     """
 
     model_config = SettingsConfigDict(
@@ -58,7 +68,7 @@ class RedisConfig(BaseSettings):
     )
 
     host: str = "127.0.0.1"
-    internal_port: int = Field(default=6379, ge=1, le=65535)
+    external_port: int = Field(default=6379, ge=1, le=65535)
     username: str
     password: str
     db_index: int = Field(default=0)
@@ -85,7 +95,7 @@ class RedisConfig(BaseSettings):
         return (
             f"redis://{self.username}:"
             f"{quote_plus(self.password)}@"
-            f"{self.host}:{self.internal_port}"
+            f"{self.host}:{self.external_port}"
         )
 
 # Initialize Redis configuration singleton
