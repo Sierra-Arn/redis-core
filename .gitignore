@@ -11,3 +11,6 @@ __pycache__/
 # Redis-specific files
 *.acl
 redis-data/
+
+# Jupyter-generated files
+.ipynb_checkpoints/

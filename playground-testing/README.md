@@ -9,8 +9,6 @@ Additionally, you can always connect directly to the Redis container and manuall
    INFO keyspace
    ```
 
----
-
 2. **View keys in current keyspace:**
    ```sql
    SELECT <database_number> 
@@ -22,18 +20,12 @@ Additionally, you can always connect directly to the Redis container and manuall
    KEYS *
    ```
 
----
-
 3. **View all users/roles:**
    ```sql
    ACL LIST
    ```
 
----
-
 4. **Exit redis-cli:**
    ```sql
    exit
    ```
-
----
