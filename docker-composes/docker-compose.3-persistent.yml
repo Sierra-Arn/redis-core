@@ -14,13 +14,40 @@ services:
       - "${REDIS_EXTERNAL_PORT}:${REDIS_INTERNAL_PORT}"
     volumes:
       - ../app/initialization/01-create-users.acl:/usr/local/etc/redis/01-create-users.acl
-      # Mounting named volume for persistent Redis data storage
-      # Volume redis-data will be created automatically on first run
-      # Redis is an in-memory database that periodically saves snapshots to disk (RDB files)
-      # By default, snapshots are created every 15 minutes OR after 10,000+ write operations
-      # All Redis data (RDB snapshots and AOF logs) will be saved in this volume
-      - ${REDIS_DATA_PATH}:/data
-
+      # Mounting volume for persistent Redis data storage
+      # Redis is an in-memory database that supports two persistence mechanisms:
+      #   - RDB (snapshotting): periodic binary snapshots of the dataset
+      #   - AOF (Append Only File): log of every write operation, replayed on restart
+      #
+      # With --appendonly yes (enabled in command), Redis writes every write command
+      # immediately to the AOF file. This provides strong durability guarantees:
+      # if you receive confirmation of a successful operation, it has been written to disk.
+      # On restart, Redis replays the entire AOF to reconstruct the full dataset.
+      #
+      # All RDB snapshots and AOF logs are stored in the /data directory inside the container.
+      #
+      # There are two approaches to persist Redis data:
+      # (Both approaches ensure data persists across container restarts and removals)
+      # =====================================================
+      # Option 1: Bind Mount (currently active)
+      # Maps a host directory directly to the container's /data directory
+      # Data is stored at the path specified by REDIS_DATA_PATH on the host machine
+      # Provides direct access to RDB and AOF files from the host filesystem
+      - ../${REDIS_DATA_PATH}:/data
+      # =====================================================
+      # Option 2: Named Volume (alternative approach)
+      # Uses Docker-managed storage with a named volume for better isolation and portability
+      # Docker manages the storage location (typically /var/lib/docker/volumes/) instead of
+      # using a direct path on the host filesystem
+      # This is NOT a bind mount - Docker controls where and how data is stored
+      # 
+      # To use this approach:
+      # 1. Comment out the bind mount line above
+      # 2. Uncomment the volumes section at the bottom of this file
+      # 3. Uncomment the line below
+      # - redis-data:/data
+      # =====================================================
+    
     # AOF (Append Only File) configuration ensures maximum data durability
     # --appendonly yes creates a separate log file that records every write command immediately
     # This provides ACID-like behavior similar to PostgreSQL - each operation is written to disk
@@ -28,7 +55,6 @@ services:
     # Without AOF, data between snapshots can be lost if container crashes unexpectedly
     # Trade-off: slightly slower performance but much better data safety
     command: redis-server --aclfile /usr/local/etc/redis/01-create-users.acl --appendonly yes
-
     networks:
       - redis-network
     healthcheck:
@@ -39,6 +65,7 @@ services:
 
   # =====================================================
   # Redis Client Service
+  # Interactive database client for development and administration
   # =====================================================
   redis-client:
     image: docker.io/library/redis:7-alpine
@@ -58,12 +85,12 @@ networks:
     driver: bridge
 
 # =====================================================
-# Volume Configuration
+# Volumes Configuration
+# Uncomment this section if using named volumes instead of bind mounts
 # =====================================================
-volumes:
-  redis-data:
-    # Using local driver to store data on the host machine
-    driver: local
-    # Volume will be created in Docker's standard directory (/var/lib/docker/volumes/)
-    # Redis data (RDB snapshots and AOF logs) will persist even after container removal
-    # On docker-compose restart, data will be restored automatically
+# volumes:
+#   redis-data:
+#     # Using local driver to store data on the host machine
+#     driver: local
+#     # Data will persist even after container removal
+#     # On docker-compose restart, data will be restored automatically
