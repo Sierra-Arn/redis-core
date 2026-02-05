@@ -92,7 +92,7 @@ Once an environment is ready, you can run and test the Redis cache implementatio
 2. **Start Redis database**
 
     ```bash
-    just redis-up-2
+    just redis-up 2
     ```
 
 3. **Test the implementation**
@@ -100,13 +100,13 @@ Once an environment is ready, you can run and test the Redis cache implementatio
     Explore the interactive Jupyter notebooks in `playground-testing/`. Additionally, you can open a Redis shell to manually verify that everything is working correctly:
     
     ```bash
-    just redis-shell-2
+    just redis-shell 2
     ```
 
 4. **Cleanup**
 
     ```bash
-    just redis-down-2
+    just redis-down 2
     ```
 
 ## **License**

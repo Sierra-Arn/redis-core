@@ -50,100 +50,130 @@ delete-redis-storage:
     sudo rm -rf ${REDIS_DATA_PATH}
 
 
-# =====================================================  
-# Docker Compose 1: Redis Server Initialization  
-# =====================================================  
-# Start Redis server with ACL-based authentication in detached mode   
-#  
-# -d flag (detached mode):  
-#   Runs containers in the background and releases the terminal immediately.  
-#   Without -d, docker compose would stream logs to stdout and block the shell  
-#   until interrupted. Detached mode is preferred for long-running services like Redis.  
-redis-up-1:  
-    docker compose -f docker-composes/docker-compose.1-init.yml --env-file .env up -d  
+# =====================================================
+# Redis Docker Compose Management
+# =====================================================
 
-# Stop and remove Redis containers, networks, and anonymous volumes  
-redis-down-1:  
-    docker compose -f docker-composes/docker-compose.1-init.yml --env-file .env down
+# Start Redis server based on specified composition number
+# Usage: just redis-up <number>
+#   number=1: Basic server with ACL-based authentication (docker-compose.1-init.yml)
+#   number=2: Server with interactive shell access (docker-compose.2-shell.yml)
+#   number=3: Persistent production-like setup (docker-compose.3-persistent.yml)
+
+redis-up number:
+    #!/usr/bin/env bash
+    if [ "{{ number }}" = "1" ]; then
+        # Docker Compose 1: Redis Server Initialization
+        # Start Redis server with ACL-based authentication in detached mode
+        #
+        # -d flag (detached mode):
+        #   Runs containers in the background and releases the terminal immediately.
+        #   Without -d, docker compose would stream logs to stdout and block the shell
+        #   until interrupted. Detached mode is preferred for long-running services like Redis.
+        docker compose -f docker-composes/docker-compose.1-init.yml --env-file .env up -d
+    elif [ "{{ number }}" = "2" ]; then
+        # Docker Compose 2: Redis with Interactive Shell Access
+        # Start Redis server and client containers in detached mode with shell access enabled
+        # Uses the same .env configuration for consistency across environments
+        # Client container runs an idle process to allow `exec`-based interactive access
+        docker compose -f docker-composes/docker-compose.2-shell.yml --env-file .env up -d
+    elif [ "{{ number }}" = "3" ]; then
+        # Docker Compose 3: Persistent Redis Production-like Setup
+        # Start Redis server with full persistence (RDB + AOF), ACL users, and long-term data retention
+        # Designed to simulate a production-ready configuration while remaining manageable in development
+        docker compose -f docker-composes/docker-compose.3-persistent.yml --env-file .env up -d
+    else
+        echo "Error: Invalid composition number. Use 1, 2, or 3."
+        exit 1
+    fi
+
+# Stop and remove Redis containers based on specified composition number
+# Usage: just redis-down <number>
+#   number=1: Stop basic server instance
+#   number=2: Stop server with shell access
+#   number=3: Stop persistent instance (data in REDIS_DATA_PATH is preserved)
+
+redis-down number:
+    #!/usr/bin/env bash
+    if [ "{{ number }}" = "1" ]; then
+        # Stop and remove Redis containers, networks, and anonymous volumes
+        docker compose -f docker-composes/docker-compose.1-init.yml --env-file .env down
+    elif [ "{{ number }}" = "2" ]; then
+        # Stop and remove Redis containers and networks defined in compose file
+        docker compose -f docker-composes/docker-compose.2-shell.yml --env-file .env down
+    elif [ "{{ number }}" = "3" ]; then
+        # Stop and remove containers and networks from the persistent Redis setup
+        # Persistent data in REDIS_DATA_PATH is preserved for future restarts or backups
+        docker compose -f docker-composes/docker-compose.3-persistent.yml --env-file .env down
+    else
+        echo "Error: Invalid composition number. Use 1, 2, or 3."
+        exit 1
+    fi
 
 
-# =====================================================  
-# Docker Compose 2: Redis with Interactive Shell Access  
-# =====================================================  
-# Start Redis server and client containers in detached mode with shell access enabled  
-# Uses the same .env configuration for consistency across environments  
-# Client container runs an idle process to allow `exec`-based interactive access  
-redis-up-2:  
-    docker compose -f docker-composes/docker-compose.2-shell.yml --env-file .env up -d  
+# =====================================================
+# Redis Interactive Shell Access
+# =====================================================
+# !!! For development convenience only — using .env file password variables directly in CLI commands !!!
+# This approach exposes secrets in process lists and command history; never use in production
 
-# !!! For development convenience only — using .env file password variables directly in CLI commands !!!  
-# This approach exposes secrets in process lists and command history; never use in production  
+# Launch Redis CLI based on composition number and user type
+# Usage: just redis-shell <number> [admin]
+#   number=2: Shell access via docker-compose.2-shell.yml
+#   number=3: Shell access via docker-compose.3-persistent.yml
+#   admin: Optional flag to connect as superuser instead of application user
 
-# Launch Redis CLI as application user
-redis-shell-2:  
-    docker compose \
-        -f docker-composes/docker-compose.2-shell.yml \
-        --env-file .env \
-        exec redis-client \
-        redis-cli \
-            --user "$REDIS_USERNAME" \
-            --pass "$REDIS_PASSWORD" \
-            -h redis-server \
-            -p "$REDIS_INTERNAL_PORT"
-
-# Launch Redis CLI as admin user with full privileges
-redis-shell-admin-2:
-    docker compose \
-        -f docker-composes/docker-compose.2-shell.yml \
-        --env-file .env \
-        exec redis-client \
-        redis-cli \
-            --user "$REDIS_ADMIN_USERNAME" \
-            --pass "$REDIS_ADMIN_PASSWORD" \
-            -h redis-server \
-            -p "$REDIS_INTERNAL_PORT"
-
-# Stop and remove Redis containers and networks defined in compose file  
-redis-down-2:  
-    docker compose -f docker-composes/docker-compose.2-shell.yml --env-file .env down
-
-
-# =====================================================  
-# Docker Compose 3: Persistent Redis Production-like Setup  
-# =====================================================  
-# Start Redis server with full persistence (RDB + AOF), ACL users, and long-term data retention  
-# Designed to simulate a production-ready configuration while remaining manageable in development    
-redis-up-3:  
-    docker compose -f docker-composes/docker-compose.3-persistent.yml --env-file .env up -d  
-
-# !!! For development convenience only — using .env file password variables directly in CLI commands !!!  
-# This approach exposes secrets in process lists and shell history; never use in production environments  
-
-# Launch Redis CLI as application user
-redis-shell-3:
-    docker compose \
-        -f docker-composes/docker-compose.3-persistent.yml \
-        --env-file .env \
-        exec redis-client \
-        redis-cli \
-            --user "$REDIS_USERNAME" \
-            --pass "$REDIS_PASSWORD" \
-            -h redis-server \
-            -p "$REDIS_INTERNAL_PORT"
-
-# Launch Redis CLI as admin user with full privileges
-redis-shell-admin-3:
-    docker compose \
-        -f docker-composes/docker-compose.3-persistent.yml \
-        --env-file .env \
-        exec redis-client \
-        redis-cli \
-            --user "$REDIS_ADMIN_USERNAME" \
-            --pass "$REDIS_ADMIN_PASSWORD" \
-            -h redis-server \
-            -p "$REDIS_INTERNAL_PORT"
-
-# Stop and remove containers and networks from the persistent Redis setup  
-# Persistent data in REDIS_DATA_PATH is preserved for future restarts or backups  
-redis-down-3:  
-    docker compose -f docker-composes/docker-compose.3-persistent.yml --env-file .env down
+redis-shell number user="app":
+    #!/usr/bin/env bash
+    if [ "{{ number }}" = "2" ]; then
+        if [ "{{ user }}" = "admin" ]; then
+            # Launch Redis CLI as admin user with full privileges
+            docker compose \
+                -f docker-composes/docker-compose.2-shell.yml \
+                --env-file .env \
+                exec redis-client \
+                redis-cli \
+                    --user "$REDIS_ADMIN_USERNAME" \
+                    --pass "$REDIS_ADMIN_PASSWORD" \
+                    -h redis-server \
+                    -p "$REDIS_INTERNAL_PORT"
+        else
+            # Launch Redis CLI as application user
+            docker compose \
+                -f docker-composes/docker-compose.2-shell.yml \
+                --env-file .env \
+                exec redis-client \
+                redis-cli \
+                    --user "$REDIS_USERNAME" \
+                    --pass "$REDIS_PASSWORD" \
+                    -h redis-server \
+                    -p "$REDIS_INTERNAL_PORT"
+        fi
+    elif [ "{{ number }}" = "3" ]; then
+        if [ "{{ user }}" = "admin" ]; then
+            # Launch Redis CLI as admin user with full privileges
+            docker compose \
+                -f docker-composes/docker-compose.3-persistent.yml \
+                --env-file .env \
+                exec redis-client \
+                redis-cli \
+                    --user "$REDIS_ADMIN_USERNAME" \
+                    --pass "$REDIS_ADMIN_PASSWORD" \
+                    -h redis-server \
+                    -p "$REDIS_INTERNAL_PORT"
+        else
+            # Launch Redis CLI as application user
+            docker compose \
+                -f docker-composes/docker-compose.3-persistent.yml \
+                --env-file .env \
+                exec redis-client \
+                redis-cli \
+                    --user "$REDIS_USERNAME" \
+                    --pass "$REDIS_PASSWORD" \
+                    -h redis-server \
+                    -p "$REDIS_INTERNAL_PORT"
+        fi
+    else
+        echo "Error: Invalid composition number. Use 2 or 3."
+        exit 1
+    fi
