@@ -1,7 +1,7 @@
 # app/db/decorators.py
 from functools import wraps
 from typing import Any, Callable
-from asyncio import iscoroutinefunction
+from inspect import iscoroutinefunction
 from .client import sync_redis_client, async_redis_client
 from .serializers import Serializer
 
