@@ -11,11 +11,11 @@ services:
     
     # Redis Environment Configuration
     environment:
-      REDIS_ADMIN_USERNAME: ${REDIS_ADMIN_USERNAME}
+      REDIS_ADMIN_NAME: ${REDIS_ADMIN_NAME}
       REDIS_ADMIN_PASSWORD: ${REDIS_ADMIN_PASSWORD}
 
-      REDIS_USERNAME: ${REDIS_USERNAME}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_USER_NAME: ${REDIS_USER_NAME}
+      REDIS_USER_PASSWORD: ${REDIS_USER_PASSWORD}
     
     # Port mapping configuration
     # Maps external host port to internal container port (default Redis port 6379)

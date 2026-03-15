@@ -15,9 +15,9 @@ class RedisConfig(BaseSettings):
     external_port : int
         TCP port the server listens on. Must be in the range 1-65535.
         Default is `6379`.
-    username : str
+    user_name : str
         Username for Redis authentication.
-    password : str
+    user_password : str
         Password for Redis authentication.
     db_index : int
         Redis database number to use for caching operations.
@@ -30,6 +30,10 @@ class RedisConfig(BaseSettings):
         TTL in seconds for cached results of slow/expensive operations
         (e.g., loading ML models, running model inference).
         Default is `3600` (1 hours).
+    decode_responses : bool
+        Whether the Redis client should automatically decode raw byte responses
+        to Python strings via UTF-8 decoding (i.e. ``bytes.decode("utf-8")``).
+        Default is ``False``.
 
     Notes:
     ------
@@ -56,6 +60,16 @@ class RedisConfig(BaseSettings):
     If both the application and Redis were running in the same Docker network 
     (e.g., as services in one `docker-compose.yml`),
     the internal port would be used instead.
+
+    **Serialization note**:
+    -----------------------
+    This project stores heterogeneous data in Redis — both JSON-serialized
+    objects and binary ``pickle`` payloads. Since ``pickle`` produces raw
+    bytes that cannot be decoded as UTF-8 strings, ``decode_responses``
+    must remain ``False``. As a consequence, all serialization and
+    deserialization (both for JSON and pickle) must be handled explicitly
+    via custom serializer/deserializer helpers rather than relying on the
+    client's built-in decoding.
     """
 
     model_config = SettingsConfigDict(
@@ -69,11 +83,12 @@ class RedisConfig(BaseSettings):
 
     host: str = "127.0.0.1"
     external_port: int = Field(default=6379, ge=1, le=65535)
-    username: str
-    password: str
+    user_name: str
+    user_password: str
     db_index: int = Field(default=0)
     ttl_fast: int = Field(default=300, ge=0)
     ttl_slow: int = Field(default=3600, ge=0)
+    decode_responses: bool = Field(default=False)
 
     @property
     def connection_url(self) -> str:
@@ -93,8 +108,8 @@ class RedisConfig(BaseSettings):
         """
 
         return (
-            f"redis://{self.username}:"
-            f"{quote_plus(self.password)}@"
+            f"redis://{self.user_name}:"
+            f"{quote_plus(self.user_password)}@"
             f"{self.host}:{self.external_port}"
         )
 

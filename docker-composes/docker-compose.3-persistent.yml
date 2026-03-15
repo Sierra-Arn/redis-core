@@ -6,10 +6,10 @@ services:
     image: docker.io/library/redis:7-alpine
     container_name: ${REDIS_SERVER_CONTAINER}
     environment:
-      REDIS_ADMIN_USERNAME: ${REDIS_ADMIN_USERNAME}
+      REDIS_ADMIN_NAME: ${REDIS_ADMIN_NAME}
       REDIS_ADMIN_PASSWORD: ${REDIS_ADMIN_PASSWORD}
-      REDIS_USERNAME: ${REDIS_USERNAME}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_USER_NAME: ${REDIS_USER_NAME}
+      REDIS_USER_PASSWORD: ${REDIS_USER_PASSWORD}
     ports:
       - "${REDIS_EXTERNAL_PORT}:${REDIS_INTERNAL_PORT}"
     volumes:
@@ -58,7 +58,7 @@ services:
     networks:
       - redis-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--user", "${REDIS_ADMIN_USERNAME}", "--pass", "${REDIS_ADMIN_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "--user", "${REDIS_ADMIN_NAME}", "--pass", "${REDIS_ADMIN_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5

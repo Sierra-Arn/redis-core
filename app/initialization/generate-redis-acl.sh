@@ -17,7 +17,7 @@ fi
 
 # Generate ACL file using environment variables
 cat > app/initialization/01-create-users.acl << EOF
-user ${REDIS_ADMIN_USERNAME} on >${REDIS_ADMIN_PASSWORD} ~* &* +@all
-user ${REDIS_USERNAME} on >${REDIS_PASSWORD} ~* +get +set +del +exists +expire +pexpire +ttl +pttl +mget +mset +setex
+user ${REDIS_ADMIN_NAME} on >${REDIS_ADMIN_PASSWORD} ~* &* +@all
+user ${REDIS_USER_NAME} on >${REDIS_USER_PASSWORD} ~* +get +set +del +exists +expire +pexpire +ttl +pttl +mget +mset +setex
 user default off nopass
 EOF

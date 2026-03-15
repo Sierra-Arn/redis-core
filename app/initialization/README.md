@@ -5,7 +5,7 @@ This section defines a role-based access control (RBAC) model for Redis, using d
 ## **I. Administrative User**
 
 ```bash
-user ${REDIS_ADMIN_USERNAME} on >${REDIS_ADMIN_PASSWORD} ~* &* +@all
+user ${REDIS_ADMIN_NAME} on >${REDIS_ADMIN_PASSWORD} ~* &* +@all
 ```
 
 ### **Assigned permissions**
@@ -24,7 +24,7 @@ Provides full administrative control over the Redis instance.
 ## **II. Caching User**
 
 ```bash
-user ${REDIS_USERNAME} on >${REDIS_PASSWORD} ~* +get +set +del +exists +expire +pexpire +ttl +pttl +mget +mset +setex
+user ${REDIS_USER_NAME} on >${REDIS_USER_PASSWORD} ~* +get +set +del +exists +expire +pexpire +ttl +pttl +mget +mset +setex
 ```
 
 ### **Assigned permissions**
@@ -103,7 +103,7 @@ user default off nopass
 # **Critical ACL File Limitations**
 
 1. **No Environment Variables**  
-Redis ACL files cannot interpolate environment variables like `${REDIS_ADMIN_USERNAME}` — they are read literally.
+Redis ACL files cannot interpolate environment variables like `${REDIS_ADMIN_NAME}` — they are read literally.
 2. **No Line Continuation**  
 The `\` character for line continuation is not supported — each user definition must be on a single, complete line.
 

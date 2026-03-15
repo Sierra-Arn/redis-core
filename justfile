@@ -133,7 +133,7 @@ redis-shell number user="app":
                 --env-file .env \
                 exec redis-client \
                 redis-cli \
-                    --user "$REDIS_ADMIN_USERNAME" \
+                    --user "$REDIS_ADMIN_NAME" \
                     --pass "$REDIS_ADMIN_PASSWORD" \
                     -h redis-server \
                     -p "$REDIS_INTERNAL_PORT"
@@ -144,8 +144,8 @@ redis-shell number user="app":
                 --env-file .env \
                 exec redis-client \
                 redis-cli \
-                    --user "$REDIS_USERNAME" \
-                    --pass "$REDIS_PASSWORD" \
+                    --user "$REDIS_USER_NAME" \
+                    --pass "$REDIS_USER_PASSWORD" \
                     -h redis-server \
                     -p "$REDIS_INTERNAL_PORT"
         fi
@@ -157,7 +157,7 @@ redis-shell number user="app":
                 --env-file .env \
                 exec redis-client \
                 redis-cli \
-                    --user "$REDIS_ADMIN_USERNAME" \
+                    --user "$REDIS_ADMIN_NAME" \
                     --pass "$REDIS_ADMIN_PASSWORD" \
                     -h redis-server \
                     -p "$REDIS_INTERNAL_PORT"
@@ -168,8 +168,8 @@ redis-shell number user="app":
                 --env-file .env \
                 exec redis-client \
                 redis-cli \
-                    --user "$REDIS_USERNAME" \
-                    --pass "$REDIS_PASSWORD" \
+                    --user "$REDIS_USER_NAME" \
+                    --pass "$REDIS_USER_PASSWORD" \
                     -h redis-server \
                     -p "$REDIS_INTERNAL_PORT"
         fi
