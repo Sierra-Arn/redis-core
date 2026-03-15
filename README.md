@@ -81,9 +81,10 @@ a next-generation web-based interactive development environment for Jupyter note
     ```
 
 5. **Start Redis database**
-   ```bash
-   just redis-up 2
-   ```
+
+    ```bash
+    just redis-up 2
+    ```
 
 ### **III. Testing**
 
