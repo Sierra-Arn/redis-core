@@ -2,6 +2,9 @@
 
 *An educational project showcasing how to use Redis with Python, covering both synchronous and asynchronous approaches.* [^1]
 
+> ⚠️ **This repository is archived.**  
+> This project originally served as an early sandbox for exploring Redis — a place to experiment before integrating the technology into something more substantial. As more serious educational projects took shape — each applying increasingly refined approaches — maintaining duplicate Redis code here lost its purpose. For a more complete and representative implementation, refer to [Human Pose Estimation Service](https://github.com/Sierra-Arn/pose-estimation-service), [Backend Core](https://github.com/Sierra-Arn/backend-core), or [Full-Stack Core](https://github.com/Sierra-Arn/fullstack-core).
+
 [^1]: Redis offers a rich set of features (e.g. data structures, pub/sub, streams, Lua scripting). However, this project focuses on its original and most common use case: a fast, simple, and reliable cache. While Redis can do much more, here I intentionally limit the implementation to classic key-value caching to keep the example clear, educational, and aligned with Redis’s core purpose.
 
 ## **Project Structure**
